@@ -13,8 +13,8 @@
 
 | Fact | Consequence |
 | --- | --- |
-| **The folder is NOT a Git repository** (no `.git`) | You cannot `git clone` it. Copy the folder/ZIP (Section 2). Optionally `git init` afterwards for your own version control. |
-| **`.env` is gitignored and must never be copied** | Create a fresh `.env` on the laptop from `.env.example`. Never move API keys on USB/email. |
+| **The project is hosted on GitHub** (private): `https://github.com/ShreeanshSachan/cinemind.git` | On the laptop, `git clone` it (Section 2.1). A ZIP copy is a fallback if GitHub is blocked. |
+| **`.env` is gitignored and is NOT in the repo** | Create a fresh `.env` on the laptop from `.env.example`. Never move API keys on USB/email. |
 | **Java 17 only** — Java 21/25 will not work | Install exactly JDK 17 and set `JAVA_HOME`. |
 | **Docker builds need internet** (Docker Hub, Maven Central, npm) | On a locked-down laptop, see Section 5 (offline transfer). |
 | **Ollama runs on the HOST, not in Docker** | Install it and pull `nomic-embed-text` (~274 MB) before starting Compose. |
@@ -35,7 +35,7 @@
 | Node.js | **24 LTS** (npm 11) | <https://nodejs.org/> | Only needed for local frontend dev/tests; Docker builds it inside the image. |
 | Docker Desktop | Recent, with **Compose v2** | <https://www.docker.com/products/docker-desktop/> | Corporate machines may require a **paid Docker Desktop licence** — check with IT. |
 | Ollama | Recent | <https://ollama.com/download> | Runs on the host at `:11434`. |
-| Git | Any | <https://git-scm.com/> | Optional, but useful to `git init` your copy. |
+| Git | Any | <https://git-scm.com/> | Required to clone the repository. |
 | `curl` / `tar` | built into Windows 10+/PowerShell | — | Used for verification commands below. |
 | MySQL 8 | — | — | **Not required on the laptop** if you use Docker Compose (it runs MySQL in a container). |
 
@@ -83,9 +83,34 @@ echo 'export JAVA_HOME=...' >> ~/.zshrc
 
 ---
 
-## 2. Move the project to the laptop
+## 2. Get the project on the laptop
 
-### 2.1 Create a clean ZIP on the current machine
+### 2.1 Clone from GitHub (recommended)
+
+The repository is private, so authenticate first — use Git Credential Manager
+(browser sign-in on first push/pull) or the GitHub CLI:
+
+```powershell
+gh auth login          # or let Git Credential Manager prompt on first access
+
+# Choose a path WITHOUT spaces if possible (simplifies Docker/JVM tooling)
+New-Item -ItemType Directory -Force -Path 'C:\dev' | Out-Null
+cd C:\dev
+git clone https://github.com/ShreeanshSachan/cinemind.git cinemind-ai
+cd C:\dev\cinemind-ai
+git status -sb          # should show "## main...origin/main" and a clean tree
+Get-ChildItem -Force
+```
+
+Expected top-level: `backend/`, `frontend/`, `database/`, `dataset/`,
+`docker-compose.yml`, `.env.example`, `.dockerignore`, `.gitignore`,
+`.gitattributes`, `README.md`, `mvnw`, `mvnw.cmd`, `.mvn/`, `docs/`.
+
+> `.gitattributes` pins all text files to LF (only `.cmd`/`.bat` to CRLF).
+> This matters on Windows where `core.autocrlf=true` would otherwise convert
+> `mvnw` to CRLF and break the Linux-based Docker build. Do not delete it.
+
+### 2.2 Fallback: clean ZIP (if GitHub is blocked on the corporate network)
 
 Do **not** copy build outputs or secrets. Run this on the source machine:
 
@@ -108,10 +133,9 @@ Write-Output "Created $zip"
 > no `target/`, no `node_modules/`, and no `dist/`. The `.env.example` template
 > **should** be there.
 
-### 2.2 On the laptop
+### 2.3 Extract the ZIP (only if you used 2.2)
 
 ```powershell
-# Choose a path WITHOUT spaces if possible (simplifies Docker/JVM tooling)
 New-Item -ItemType Directory -Force -Path 'C:\dev' | Out-Null
 Expand-Archive -Path "$env:USERPROFILE\Desktop\cinemind-ai.zip" -DestinationPath 'C:\dev'
 Rename-Item 'C:\dev\cinemind-ai-stage' 'cinemind-ai'
@@ -119,21 +143,18 @@ cd C:\dev\cinemind-ai
 Get-ChildItem -Force
 ```
 
-Expected top-level: `backend/`, `frontend/`, `database/`, `dataset/`,
-`docker-compose.yml`, `.env.example`, `.dockerignore`, `.gitignore`, `README.md`,
-`mvnw`, `mvnw.cmd`, `.mvn/`, `docs/`.
-
-### 2.3 Optional: make it a Git repo on the laptop
+### 2.4 Verify the copy (both paths)
 
 ```powershell
 cd C:\dev\cinemind-ai
-git init
-git add .
-git commit -m "Initial import of CineMind AI"
+Test-Path .env                      # must be False - create it in Section 4
+git status --porcelain              # must be empty (clean checkout)
+git check-ignore -v .env            # confirms .env is ignored
 ```
 
-`.gitignore` already excludes `.env`, `target/`, `node_modules/`, `dist/`,
-`*.log`, `*.key`, `*.pem`. Confirm with `git status` that **no `.env` is staged**.
+`.gitignore` excludes `.env`, `target/`, `node_modules/`, `dist/`, `.angular/`,
+`*.log`, `*.key`, `*.pem`, while keeping `.env.example` and the Maven Wrapper
+jar. **No API keys are present in the repository.**
 
 ---
 
@@ -494,6 +515,7 @@ To start again later: `docker compose up -d`, then re-run
 
 | Thing | Default URL / command |
 | --- | --- |
+| Git repository (private) | `https://github.com/ShreeanshSachan/cinemind.git` (`main`) |
 | Angular UI | <http://localhost:4200> |
 | API Gateway | <http://localhost:8080> |
 | Eureka dashboard | <http://localhost:8761> |
@@ -514,7 +536,7 @@ To start again later: `docker compose up -d`, then re-run
 
 1. Install JDK 17 (+ `JAVA_HOME`), Docker Desktop, Node 24, Ollama.
 2. `ollama pull nomic-embed-text`.
-3. Copy the clean ZIP to `C:\dev\cinemind-ai`, extract.
+3. `git clone https://github.com/ShreeanshSachan/cinemind.git C:\dev\cinemind-ai`.
 4. `Copy-Item .env.example .env`; set MySQL passwords and (optionally) `GEMINI_API_KEY`.
 5. `docker compose build` → `docker compose up -d` → wait for all `healthy`.
 6. `curl.exe -X POST http://localhost:8080/api/rag/index/all`.
