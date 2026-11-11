@@ -1,0 +1,48 @@
+server:
+  port: ${ORCHESTRATOR_PORT:8084}
+
+spring:
+  application:
+    name: AI-ORCHESTRATOR
+  ai:
+    model:
+      chat: google-genai
+    # CREDIT OPTIMIZATION: Spring AI defaults to 10 retry attempts. A normal
+    # recommendation must make at most TWO Gemini calls (one per agent), with
+    # no automatic retries or loops.
+    retry:
+      max-attempts: 1
+      on-client-errors: false
+    google:
+      genai:
+        # Sentinel keeps Spring AI's client constructible at startup when no key
+        # is supplied; GeminiAvailability then prevents any outbound call.
+        api-key: ${GEMINI_API_KEY:not-configured}
+        chat:
+          options:
+            model: ${GEMINI_MODEL:${LLM_MODEL:gemini-2.5-flash}}
+            temperature: 0.1
+            max-output-tokens: 1024
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+
+cinemind:
+  orchestrator:
+    rag-top-k: 10
+    max-recommendations: 5
+    max-query-length: 500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,17 @@
+# Keep ALL text files LF in the repository and in the working tree.
+# Windows `core.autocrlf=true` would otherwise convert mvnw (and Dockerfiles)
+# to CRLF and break the Linux-based Docker builds.
+* text=auto eol=lf
+
+# Windows batch scripts are the only files that need CRLF.
+mvnw.cmd  text eol=crlf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+
+# Never line-convert binaries.
+*.jar  binary
+*.ico  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary

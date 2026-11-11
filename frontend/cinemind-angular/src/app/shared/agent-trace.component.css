@@ -1,0 +1,106 @@
+.trace {
+  padding: clamp(1.4rem, 3vw, 2.2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trace-head h2 { margin-top: 0.45rem; }
+
+.stages {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.stage.done { border-color: rgba(70, 217, 165, 0.28); }
+
+.stage-icon {
+  flex: 0 0 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--purple);
+  background: rgba(155, 108, 255, 0.13);
+  border: 1px solid rgba(155, 108, 255, 0.25);
+}
+
+.stage-body { flex: 1; min-width: 0; }
+.stage-body h3 { font-size: 0.98rem; }
+.stage-body p { color: var(--muted); font-size: 0.81rem; margin-top: 0.15rem; }
+
+.status {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--warning);
+  background: rgba(245, 194, 107, 0.12);
+  border: 1px solid rgba(245, 194, 107, 0.28);
+}
+
+.status.ok {
+  color: var(--success);
+  background: rgba(70, 217, 165, 0.12);
+  border-color: rgba(70, 217, 165, 0.3);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.stat {
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--gradient-soft);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.stat strong { display: block; font-size: 1.55rem; line-height: 1.1; }
+.stat span { color: var(--muted); font-size: 0.76rem; }
+
+.preferences h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+
+.pref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1.4rem;
+}
+
+.pref-row { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.pref-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pref-values { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.none { color: var(--muted); font-size: 0.82rem; }
+.value { font-size: 0.9rem; color: var(--text-soft); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .pref-grid { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr; }
+  .stage { flex-wrap: wrap; }
+  .status { margin-left: auto; }
+}

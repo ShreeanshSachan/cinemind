@@ -1,0 +1,32 @@
+# ---------- Maven ----------
+target/
+.mvn/timing.properties
+# keep the wrapper jar, ignore everything else Maven generates
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Angular / Node ----------
+node_modules/
+dist/
+.angular/
+coverage/
+.npm/
+
+# ---------- IDE / editor ----------
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ---------- Secrets & runtime ----------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.log
+*.pid
+
+# ---------- OS / misc ----------
+.DS_Store
+Thumbs.db
+*.class

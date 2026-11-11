@@ -1,0 +1,40 @@
+# Tests use in-memory H2 and never contact Eureka, Movie Service or Ollama.
+spring:
+  application:
+    name: RAG-SERVICE
+  datasource:
+    url: jdbc:h2:mem:cinemind_rag_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+  cloud:
+    discovery:
+      enabled: false
+  ai:
+    model:
+      embedding: ollama
+    ollama:
+      base-url: http://localhost:1
+      init:
+        embedding:
+          include: false
+      embedding:
+        model: nomic-embed-text
+        options:
+          model: nomic-embed-text
+
+eureka:
+  client:
+    enabled: false
+
+cinemind:
+  rag:
+    embedding-dimension: 768
+    default-top-k: 10
+    max-top-k: 50

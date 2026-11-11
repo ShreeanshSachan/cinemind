@@ -1,0 +1,74 @@
+<section class="container results">
+  <a class="back" routerLink="/" fragment="search">← New search</a>
+
+  <div class="head">
+    <span class="eyebrow">Your AI recommendations</span>
+    <h1 class="gradient-text">Curated for your mood</h1>
+    @if (result()) {
+      <p class="query">“{{ result()!.query }}”</p>
+    }
+  </div>
+
+  @if (loading()) {
+    <app-loading
+      message="The agents are working…"
+      detail="Preference analysis → RAG retrieval → Gemini ranking. This takes a moment."
+    />
+  } @else if (error()) {
+    <app-error [message]="error()!" (retry)="run()" />
+  } @else if (result(); as data) {
+    @if (data.recommendations.length === 0) {
+      <div class="empty glass">
+        <h3>No matches this time</h3>
+        <p>The agents could not find a suitable movie in the retrieved documents. Try a broader description.</p>
+        <a class="btn btn-ghost btn-sm" routerLink="/" fragment="search">Adjust your search</a>
+      </div>
+    } @else {
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Recommended movies</h2>
+          <p class="section-subtitle">{{ data.recommendations.length }} picks with AI explanations.</p>
+        </div>
+        <span class="chip chip-blue">{{ data.retrievedDocuments }} documents retrieved</span>
+      </div>
+      <app-recommendation-list [items]="items()" (findSimilar)="onFindSimilar($event)" />
+    }
+
+    @if (similarTitle()) {
+      <section class="section similar">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Semantic discovery</span>
+            <h2 class="section-title">Similar to “{{ similarTitle() }}”</h2>
+            <p class="section-subtitle">Found by the RAG Service using stored Ollama embeddings.</p>
+          </div>
+        </div>
+
+        @if (similarLoading()) {
+          <app-loading message="Searching for similar movies…" />
+        } @else if (similarError()) {
+          <p class="soft-error">{{ similarError() }}</p>
+        } @else if (similar().length === 0) {
+          <p class="soft-error">No similar movies were found in the indexed library.</p>
+        } @else {
+          <div class="movie-grid">
+            @for (movie of similar(); track movie.id) {
+              <app-movie-card [movie]="movie" />
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <section class="section">
+      <app-agent-trace
+        [trace]="data.agentTrace"
+        [preferences]="data.preferences"
+        [retrievedDocuments]="data.retrievedDocuments"
+      />
+      <div class="trace-link">
+        <a class="btn btn-ghost btn-sm" routerLink="/trace">Open full execution trace →</a>
+      </div>
+    </section>
+  }
+</section>

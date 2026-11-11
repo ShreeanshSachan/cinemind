@@ -1,0 +1,31 @@
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.35rem;
+}
+
+.item {
+  position: relative;
+  animation: fade-up 420ms ease both;
+}
+
+.rank {
+  position: absolute;
+  z-index: 2;
+  top: -0.6rem;
+  left: -0.6rem;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--gradient);
+  box-shadow: 0 6px 18px rgba(122, 92, 255, 0.4);
+}
+
+@media (max-width: 560px) {
+  .list { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+}

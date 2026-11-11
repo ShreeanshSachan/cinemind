@@ -1,0 +1,80 @@
+<section class="hero container">
+  <div class="hero-copy fade-up">
+    <span class="eyebrow">AI-powered movie discovery</span>
+    <h1>Find the film that<br /><span class="gradient-text">matches your mood.</span></h1>
+    <p class="lead">
+      Describe what you feel like watching in plain language. Two specialised AI agents,
+      semantic search over the movie library and a transparent execution trace work
+      together to explain every recommendation.
+    </p>
+    <div class="badges">
+      <span class="badge"><b>2</b> Gemini agents</span>
+      <span class="badge"><b>10</b> retrieved documents</span>
+      <span class="badge"><b>5</b> explained picks</span>
+    </div>
+  </div>
+
+  <div class="hero-art" aria-hidden="true">
+    <div class="orb"></div>
+    <div class="art-card one"><span>✦</span><small>Preference Analyst</small></div>
+    <div class="art-card two"><span>◈</span><small>RAG retrieval</small></div>
+    <div class="art-card three"><span>★</span><small>Recommendation Specialist</small></div>
+  </div>
+</section>
+
+<section class="container search-wrap">
+  <app-search-bar [genres]="genres()" [busy]="busy()" (search)="onSearch($event)" />
+</section>
+
+<section class="container section" id="featured">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">From the library</span>
+      <h2 class="section-title">Featured movies</h2>
+      <p class="section-subtitle">Top-rated titles currently in the CineMind catalogue.</p>
+    </div>
+    <span class="chip chip-blue">{{ featured().length }} titles</span>
+  </div>
+
+  @if (loading()) {
+    <app-loading message="Loading the movie library…" detail="Fetching metadata through the API Gateway." />
+  } @else if (error()) {
+    <app-error [message]="error()!" (retry)="loadCatalogue()" />
+  } @else if (featured().length === 0) {
+    <div class="empty glass">
+      <p>The movie library is empty right now. Add movies through the Movie Service and refresh.</p>
+    </div>
+  } @else {
+    <div class="movie-grid movie-grid-wide">
+      @for (movie of featured(); track movie.id) {
+        <app-movie-card [movie]="movie" />
+      }
+    </div>
+  }
+</section>
+
+<section class="container section how" id="how">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Under the hood</span>
+      <h2 class="section-title">How CineMind AI thinks</h2>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step glass">
+      <span class="num">01</span>
+      <h3>Understand</h3>
+      <p>The Preference Analyst turns your sentence into genres, mood, reference films and hard constraints.</p>
+    </div>
+    <div class="step glass">
+      <span class="num">02</span>
+      <h3>Retrieve</h3>
+      <p>Local Ollama embeddings and Java cosine similarity find the ten most relevant movies from MySQL.</p>
+    </div>
+    <div class="step glass">
+      <span class="num">03</span>
+      <h3>Explain</h3>
+      <p>The Recommendation Specialist ranks only those candidates and writes a short reason for each pick.</p>
+    </div>
+  </div>
+</section>

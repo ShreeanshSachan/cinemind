@@ -1,0 +1,78 @@
+<form class="search glass" [formGroup]="form" (ngSubmit)="submit()" id="search" novalidate>
+  <div class="head">
+    <span class="eyebrow">Tell us what you are in the mood for</span>
+    <h2>Describe your perfect movie</h2>
+    <p class="hint">CineMind AI reads your request, searches its movie library and explains every pick.</p>
+  </div>
+
+  <div class="query-row">
+    <input
+      class="input query"
+      type="text"
+      formControlName="query"
+      placeholder="e.g. a mind-bending psychological thriller like Shutter Island, after 2010, under 140 minutes"
+      aria-label="Describe the movie you want"
+      autocomplete="off"
+    />
+    <button type="submit" class="btn btn-primary submit" [disabled]="busy">
+      @if (busy) { Searching… } @else { <span>Find movies <span aria-hidden="true">✦</span></span> }
+    </button>
+  </div>
+
+  @if (form.controls.query.invalid && form.controls.query.touched) {
+    <p class="field-error">Please describe what you want to watch (at least 3 characters).</p>
+  }
+
+  <div class="filters">
+    <div class="field">
+      <label for="genre">Genre</label>
+      <select id="genre" class="select" formControlName="genre">
+        <option value="">Any genre</option>
+        @for (genre of genres; track genre) {
+          <option [value]="genre">{{ genre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="mood">Mood</label>
+      <select id="mood" class="select" formControlName="mood">
+        @for (mood of moods; track mood.value) {
+          <option [value]="mood.value">{{ mood.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="yearFrom">Released from</label>
+      <input id="yearFrom" class="input" type="number" formControlName="yearFrom" placeholder="1990" />
+    </div>
+
+    <div class="field">
+      <label for="yearTo">Released up to</label>
+      <input id="yearTo" class="input" type="number" formControlName="yearTo" placeholder="2026" />
+    </div>
+
+    <div class="field">
+      <label for="maxRuntime">Max runtime (min)</label>
+      <input id="maxRuntime" class="input" type="number" formControlName="maxRuntime" placeholder="140" />
+    </div>
+
+    <div class="field">
+      <label for="minRating">Minimum rating</label>
+      <input id="minRating" class="input" type="number" step="0.1" formControlName="minRating" placeholder="7.0" />
+    </div>
+
+    <div class="field">
+      <label for="maxResults">Results</label>
+      <input id="maxResults" class="input" type="number" formControlName="maxResults" min="1" max="5" />
+    </div>
+  </div>
+
+  <div class="prompts">
+    <span class="prompts-label">Try:</span>
+    <button type="button" class="prompt" (click)="usePrompt('mind-bending psychological thrillers after 2010')">Psychological thrillers</button>
+    <button type="button" class="prompt" (click)="usePrompt('dark crime mysteries with a twist')">Dark mysteries</button>
+    <button type="button" class="prompt" (click)="usePrompt('thoughtful science fiction about time and memory')">Sci-fi &amp; time</button>
+  </div>
+</form>

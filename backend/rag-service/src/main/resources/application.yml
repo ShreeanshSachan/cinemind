@@ -1,0 +1,57 @@
+server:
+  port: ${RAG_SERVICE_PORT:8083}
+
+spring:
+  application:
+    name: RAG-SERVICE
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:cinemind}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQL_USER:cinemind}
+    password: ${MYSQL_PASSWORD:change-me}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    # Movie Service owns the schema via Flyway (V1). RAG only reads/writes rows.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: false
+  ai:
+    # Explicitly select the Ollama embedding provider (Spring AI 1.x switch).
+    model:
+      embedding: ollama
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      init:
+        # Never pull models at startup; a missing model is reported by /health.
+        pull-model-strategy: never
+        embedding:
+          include: false
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:${EMBEDDING_MODEL:nomic-embed-text}}
+        options:
+          model: ${OLLAMA_EMBEDDING_MODEL:${EMBEDDING_MODEL:nomic-embed-text}}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+
+cinemind:
+  rag:
+    # nomic-embed-text produces 768-dimensional vectors.
+    embedding-dimension: ${EMBEDDING_DIMENSION:768}
+    default-top-k: 10
+    max-top-k: 50
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

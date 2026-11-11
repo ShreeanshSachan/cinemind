@@ -1,0 +1,33 @@
+# Tests never contact Gemini, Eureka or the RAG Service.
+spring:
+  application:
+    name: AI-ORCHESTRATOR
+  ai:
+    model:
+      chat: google-genai
+    retry:
+      max-attempts: 1
+      on-client-errors: false
+    google:
+      genai:
+        # Dummy value only so auto-configuration can create the ChatModel bean.
+        # All tests replace it with a Mockito mock. No request is ever sent.
+        api-key: test-key-not-real
+        chat:
+          options:
+            model: gemini-2.5-flash
+            temperature: 0.1
+            max-output-tokens: 1024
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+cinemind:
+  orchestrator:
+    rag-top-k: 10
+    max-recommendations: 5
+    max-query-length: 500

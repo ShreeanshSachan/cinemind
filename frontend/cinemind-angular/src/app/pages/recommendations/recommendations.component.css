@@ -1,0 +1,38 @@
+.results { padding-block: 2.5rem 4rem; }
+
+.back {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  transition: color 180ms ease;
+}
+
+.back:hover { color: var(--purple); }
+
+.head { margin-bottom: 2.5rem; }
+.head h1 { font-size: clamp(2rem, 4.5vw, 3.1rem); margin-top: 0.6rem; }
+
+.query {
+  margin-top: 0.8rem;
+  color: var(--text-soft);
+  font-size: 1rem;
+  max-width: 75ch;
+}
+
+.empty { padding: 3rem 1.5rem; text-align: center; display: grid; gap: 0.8rem; justify-items: center; }
+.empty h3 { font-size: 1.25rem; }
+.empty p { color: var(--muted); max-width: 55ch; }
+
+.soft-error {
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 1rem 0;
+}
+
+.trace-link { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+@media (max-width: 640px) {
+  .results { padding-top: 1.75rem; }
+}

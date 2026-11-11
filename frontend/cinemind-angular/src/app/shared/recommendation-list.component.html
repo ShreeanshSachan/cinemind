@@ -1,0 +1,14 @@
+<div class="list">
+  @for (item of items; track item.recommendation.movieId; let i = $index) {
+    <div class="item" [style.animation-delay.ms]="i * 70">
+      <div class="rank" aria-hidden="true">{{ i + 1 }}</div>
+      <app-movie-card
+        [movie]="item.movie"
+        [matchScore]="item.recommendation.matchScore"
+        [reason]="item.recommendation.reason"
+        [showSimilarButton]="true"
+        (findSimilar)="onFindSimilar($event)"
+      />
+    </div>
+  }
+</div>

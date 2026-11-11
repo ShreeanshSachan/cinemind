@@ -1,0 +1,16 @@
+.git
+.gitignore
+**/target
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/.npm
+**/*.log
+**/*.err
+.env
+.env.*
+!.env.example
+**/*.key
+**/*.pem
+README.md

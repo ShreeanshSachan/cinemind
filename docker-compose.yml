@@ -1,0 +1,212 @@
+name: cinemind-ai
+
+# =============================================================================
+# CineMind AI - full stack.
+# Copy .env.example to .env and fill in GEMINI_API_KEY before starting.
+# Ollama is NOT part of this stack: run it on the host and pull the model:
+#   ollama pull nomic-embed-text
+# The RAG container reaches it through host.docker.internal (see extra_hosts).
+# =============================================================================
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cinemind}
+      MYSQL_USER: ${MYSQL_USER:-cinemind}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 25
+      start_period: 40s
+
+  discovery-server:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: discovery-server
+    environment:
+      DISCOVERY_SERVER_PORT: 8761
+    ports:
+      - "${DISCOVERY_SERVER_PORT:-8761}:8761"
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 50s
+
+  movie-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: movie-service
+    environment:
+      MOVIE_SERVICE_PORT: 8081
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cinemind}
+      MYSQL_USER: ${MYSQL_USER:-cinemind}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    ports:
+      - "${MOVIE_SERVICE_PORT:-8081}:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  rag-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: rag-service
+    environment:
+      RAG_SERVICE_PORT: 8083
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cinemind}
+      MYSQL_USER: ${MYSQL_USER:-cinemind}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-768}
+    # Allows the container to reach the Ollama process running on the host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${RAG_SERVICE_PORT:-8083}:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      # The movie_embeddings table is created by the Movie Service Flyway V1.
+      movie-service:
+        condition: service_healthy
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  ai-orchestrator:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: ai-orchestrator
+    environment:
+      ORCHESTRATOR_PORT: 8084
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-not-configured}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    ports:
+      - "${ORCHESTRATOR_PORT:-8084}:8084"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: api-gateway
+    environment:
+      GATEWAY_PORT: 8080
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      movie-service:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+      ai-orchestrator:
+        condition: service_healthy
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/cinemind-angular/Dockerfile
+      args:
+        # Browser-visible gateway URL; follows the published host port.
+        API_BASE_URL: http://localhost:${GATEWAY_PORT:-8080}
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - cinemind
+    restart: unless-stopped
+    healthcheck:
+      # Use 127.0.0.1: busybox wget may resolve "localhost" to ::1 first,
+      # while nginx listens on IPv4 only, causing a false unhealthy status.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  mysql_data:
+
+networks:
+  cinemind:
+    driver: bridge

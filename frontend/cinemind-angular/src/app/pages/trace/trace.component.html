@@ -1,0 +1,28 @@
+<section class="container trace-page">
+  <a class="back" routerLink="/" fragment="search">← New search</a>
+
+  <div class="head">
+    <span class="eyebrow">Transparency</span>
+    <h1 class="gradient-text">AI execution trace</h1>
+    <p class="lead">Exactly what the backend agents did for your most recent request.</p>
+  </div>
+
+  @if (state.lastResult(); as result) {
+    <p class="query">Request: “{{ result.query }}”</p>
+    <app-agent-trace
+      [trace]="result.agentTrace"
+      [preferences]="result.preferences"
+      [retrievedDocuments]="result.retrievedDocuments"
+    />
+    <div class="actions">
+      <a class="btn btn-ghost btn-sm" routerLink="/recommendations"
+         [queryParams]="{ query: result.query, maxResults: result.maxResults }">View recommendations →</a>
+    </div>
+  } @else {
+    <div class="empty glass">
+      <h3>No execution yet</h3>
+      <p>Run a search first. The trace on this page is filled with the real backend response from that request.</p>
+      <a class="btn btn-primary btn-sm" routerLink="/" fragment="search">Start a search</a>
+    </div>
+  }
+</section>

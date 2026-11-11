@@ -1,0 +1,23 @@
+# Test profile: in-memory H2, no MySQL, no Flyway, no Eureka.
+# Schemas are created from the JPA entities so tests are fully portable.
+spring:
+  application:
+    name: MOVIE-SERVICE
+  datasource:
+    url: jdbc:h2:mem:cinemind_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
